@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dagens Schema</title>
+  
+  <!-- Länk till din separata bildbank -->
+  <script src="bildbank.js"></script>
+
+  <!-- Google Font: Lexend -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Exakta färger från din Figma */
+      --color-green: #006700;
+      --color-blue: #0072BD;
+      --color-red: #FF0D00;
+      --color-gray: #BFBFBF;
+      --color-dark: #111827;
+
+      /* Dynamic PECS-färg (sätts via JS) */
+      --current-day-bg: #FFFCDD;
+      
+      /* Figma Skugga: X=3, Y=3, Blur=0, Spread=0, 25% Svart */
+      --figma-shadow: 3px 3px 0px rgba(0, 0, 0, 0.25);
+
+      --timeline-hour-start: 6;
+      --timeline-hour-end: 20;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Lexend', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background-color: var(--current-day-bg);
+      color: var(--color-dark);
+      transition: background-color 0.3s ease;
+    }
+
+    .app-viewport {
+      width: 100vw;
+      height: 100vh;
+      background-color: var(--current-day-bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: background-color 0.3s ease;
+    }
+
+    /* HEADER */
+    header.day-header {
+      background-color: var(--current-day-bg);
+      padding: 24px 32px 16px 32px;
+      border-bottom: 2px solid var(--color-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 100;
+      transition: background-color 0.3s ease;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+
+    .nav-btn svg {
+      width: 48px;
+      height: 48px;
+      fill: none;
+      stroke: var(--color-dark);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .day-title {
+      font-size: 48px;
+      font-weight: 400;
+      color: var(--color-dark);
+      line-height: 1.1;
+    }
+
+    .day-badge-img {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+    }
+
+    .date-subtitle {
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--color-dark);
+      margin-top: 6px;
+    }
+
+    /* TIMELINE SCROLL AREA */
+    .timeline-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 32px 120px 32px;
+      position: relative;
+      width: 100%;
+      background-color: var(--current-day-bg);
+      transition: background-color 0.3s ease;
+    }
+
+    .timeline-top-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .clock-icon-btn {
+      width: 44px;
+      height: 44px;
+      background: var(--color-dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: var(--figma-shadow);
+    }
+
+    .timeline-heading {
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--color-dark);
+    }
+
+    .timeline-container {
+      position: relative;
+      height: 1800px;
+      width: 100%;
+    }
+
+    /* RADER MED PRICKAR */
+    .hour-row {
+      position: absolute;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+
+    .hour-label {
+      width: 80px;
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--color-dark);
+    }
+
+    .hour-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      margin-right: 12px;
+      flex-shrink: 0;
+      transition: background-color 0.3s ease;
+    }
+
+    .hour-dot.passed {
+      background-color: var(--color-green);
+    }
+
+    .hour-dot.future {
+      background-color: var(--color-red);
+    }
+
+    .hour-line {
+      flex: 1;
+      height: 1.5px;
+      background-color: rgba(17, 24, 39, 0.2);
+    }
+
+    /* "JUST NU"-PIL */
+    .now-indicator {
+      position: absolute;
+      left: 75px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      transition: top 0.5s ease-in-out;
+      transform: translateY(-50%);
+      filter: drop-shadow(3px 3px 0px rgba(0, 0, 0, 0.25));
+    }
+
+    .now-arrow-svg {
+      width: 150px;
+      height: auto;
+      display: block;
+      overflow: visible;
+    }
+
+    /* BASE EVENT CARD */
+    .event-card {
+      position: absolute;
+      left: 235px;
+      right: 0px;
+      border-radius: 20px;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 10;
+      box-shadow: var(--figma-shadow);
+      transition: all 0.3s ease;
+      overflow: hidden;
+      box-sizing: border-box;
+      border: 3px solid transparent;
+    }
+
+    .event-card.state-passed {
+      background-color: transparent;
+      border: 3px solid var(--color-gray);
+      box-shadow: none;
+    }
+
+    .event-card.state-passed .event-title {
+      font-size: 26px;
+      font-weight: 400;
+      color: var(--color-gray);
+    }
+
+    .event-card.state-passed .event-time {
+      color: var(--color-gray);
+    }
+
+    .event-card.state-passed .event-img {
+      opacity: 0.5;
+    }
+
+    .check-icon {
+      margin-left: auto;
+      width: 48px;
+      height: 48px;
+      background: var(--color-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: var(--figma-shadow);
+    }
+
+    .event-card.state-active {
+      background-color: #FFFFFF;
+      border: 4px solid var(--color-green);
+      z-index: 20;
+    }
+
+    .event-card.state-active .event-title {
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--color-dark);
+    }
+
+    .event-card.state-upcoming {
+      background-color: #FFFFFF;
+      border: 3px solid var(--color-blue);
+    }
+
+    .event-card.state-upcoming .event-title {
+      font-size: 26px;
+      font-weight: 400;
+      color: var(--color-dark);
+    }
+
+    .countdown-text {
+      margin-left: auto;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--color-red);
+      flex-shrink: 0;
+    }
+
+    .event-img {
+      width: 96px;
+      height: 96px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .event-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .event-time {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--color-blue);
+    }
+
+    /* FOOTER / HEM-IKON */
+    .home-indicator {
+      position: fixed;
+      bottom: 24px;
+      left: 32px;
+      z-index: 200;
+      width: 64px;
+      height: 64px;
+      background: #FFFFFF;
+      border: 2px solid var(--color-dark);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--figma-shadow);
+      cursor: pointer;
+    }
+
+    .home-indicator img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-viewport">
+    
+    <!-- HEADER -->
+    <header class="day-header" id="dayHeader">
+      <div class="nav-row">
+        <button class="nav-btn" id="prevDayBtn" onclick="changeDay(-1)">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        
+        <div class="title-group">
+          <h1 class="day-title" id="dayTitle">Idag fredag</h1>
+          <img class="day-badge-img" id="dayBadgeImg" src="bilder/dag_fredag.png" alt="Dag" onerror="this.style.display='none'">
+        </div>
+
+        <button class="nav-btn" id="nextDayBtn" onclick="changeDay(1)">
+          <svg viewBox="0 0 24 24"><path d="M9 5l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="date-subtitle" id="dateSubtitle">31 juli 2026</div>
+    </header>
+
+    <!-- TIMELINE SCROLL AREA -->
+    <div class="timeline-scroll-area" id="scrollArea">
+      
+      <div class="timeline-top-bar">
+        <div class="clock-icon-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <span class="timeline-heading">Händer idag</span>
+      </div>
+
+      <div class="timeline-container" id="timelineContainer">
+        <!-- "JUST NU"-PIL -->
+        <div class="now-indicator" id="nowIndicator">
+          <svg class="now-arrow-svg" viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 10 30 C 10 21 17 15 26 15 L 98 15 C 103 15 106 11 106 5 C 106 2 109 0 112 1.5 L 154 51 C 156.5 54 156.5 56 154 59 L 112 108.5 C 109 110 106 108 106 105 C 106 99 103 95 98 95 L 26 95 C 17 95 10 89 10 80 Z" fill="#006700" stroke="none"/>
+            <text id="nowTimeText" x="58" y="55" fill="#FFFFFF" font-family="Lexend, sans-serif" font-size="22" font-weight="700" text-anchor="middle" dominant-baseline="central">13:43</text>
+          </svg>
+        </div>
+
+        <!-- Händelser renderas dynamiskt här -->
+        <div id="eventsContainer"></div>
+      </div>
+
+    </div>
+
+    <!-- HEM-IKON -->
+    <div class="home-indicator" onclick="resetToToday()">
+      <img src="bilder/hem.png" alt="Hem" onerror="this.parentNode.innerHTML='<svg width=36 height=36 viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#111827\' stroke-width=\'2\'><path d=\'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\'/></svg>'">
+    </div>
+
+  </div>
+
+  <script>
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
+    const PECS_DAYS = {
+      0: { name: 'söndag', color: '#FFE5E5', icon: 'bilder/dag_sondag.png' },
+      1: { name: 'måndag', color: '#E5FBDF', icon: 'bilder/dag_mandag.png' },
+      2: { name: 'tisdag', color: '#DBF1FA', icon: 'bilder/dag_tisdag.png' },
+      3: { name: 'onsdag', color: '#FFFFFF', icon: 'bilder/dag_onsdag.png' },
+      4: { name: 'torsdag', color: '#F0E5D7', icon: 'bilder/dag_torsdag.png' },
+      5: { name: 'fredag', color: '#FFFCDD', icon: 'bilder/dag_fredag.png' },
+      6: { name: 'lördag', color: '#FDF1F5', icon: 'bilder/dag_lordag.png' }
+    };
+
+    const API_KEY = 'AIzaSyAjjlwuHPP1LKiiVbwVxD2czclt7IbOyGQ';
+    const CALENDAR_ID = '6744157021227f5f1edf152db8fafde7afee0835d7a88c805971273617e120ef@group.calendar.google.com';
+
+    let selectedDateOffset = 0;
+    let cachedEvents = [];
+    const DAY_START_HOUR = 6;
+    const DAY_END_HOUR = 20;
+    const TOTAL_MINUTES = (DAY_END_HOUR - DAY_START_HOUR) * 60;
+
+    function getCustomImage(title) {
+      if (!title) return typeof DEFAULT_IMAGE !== 'undefined' ? DEFAULT_IMAGE : '';
+      const lower = title.toLowerCase();
+      
+      // Använder IMAGE_BANK från bildbank.js
+      if (typeof IMAGE_BANK !== 'undefined') {
+        for (const [key, url] of Object.entries(IMAGE_BANK)) {
+          if (lower.includes(key)) return url;
+        }
+      }
+      return typeof DEFAULT_IMAGE !== 'undefined' ? DEFAULT_IMAGE : '';
+    }
+
+    function timeToPixels(date) {
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const currentMin = (hours * 60) + minutes - (DAY_START_HOUR * 60);
+      const container = document.getElementById('timelineContainer');
+      const containerHeight = container ? container.offsetHeight : 1800;
+      const percentage = currentMin / TOTAL_MINUTES;
+      return Math.max(0, Math.min(containerHeight, percentage * containerHeight));
+    }
+
+    function renderHourMarks() {
+      const container = document.getElementById('timelineContainer');
+      const oldHours = container.querySelectorAll('.hour-row');
+      oldHours.forEach(el => el.remove());
+
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      for (let h = DAY_START_HOUR; h <= DAY_END_HOUR; h++) {
+        const dummy = new Date();
+        dummy.setHours(h, 0, 0);
+        const topPos = timeToPixels(dummy);
+
+        const row = document.createElement('div');
+        row.className = 'hour-row';
+        row.style.top = `${topPos}px`;
+
+        let dotClass = 'future';
+        if (selectedDateOffset < 0 || (selectedDateOffset === 0 && h <= currentHour)) {
+          dotClass = 'passed';
+        }
+
+        row.innerHTML = `
+          <div class="hour-label">${h.toString().padStart(2, '0')}:00</div>
+          <div class="hour-dot ${dotClass}"></div>
+          <div class="hour-line"></div>
+        `;
+        container.appendChild(row);
+      }
+    }
+
+    function updateHeader() {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + selectedDateOffset);
+
+      const dayIndex = targetDate.getDay();
+      const pecs = PECS_DAYS[dayIndex];
+
+      document.documentElement.style.setProperty('--current-day-bg', pecs.color);
+
+      const badgeImg = document.getElementById('dayBadgeImg');
+      badgeImg.src = pecs.icon;
+      badgeImg.style.display = 'block';
+
+      const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+      document.getElementById('dateSubtitle').innerText = targetDate.toLocaleDateString('sv-SE', dateOptions);
+
+      const dayTitle = document.getElementById('dayTitle');
+      if (selectedDateOffset === 0) {
+        dayTitle.innerText = `Idag ${pecs.name}`;
+      } else if (selectedDateOffset === 1) {
+        dayTitle.innerText = `Imorgon ${pecs.name}`;
+      } else {
+        dayTitle.innerText = pecs.name.charAt(0).toUpperCase() + pecs.name.slice(1);
+      }
+
+      document.getElementById('prevDayBtn').disabled = (selectedDateOffset <= 0);
+    }
+
+    function changeDay(delta) {
+      if (selectedDateOffset + delta < 0) return;
+      selectedDateOffset += delta;
+      updateHeader();
+      renderHourMarks();
+      fetchEvents();
+      scrollToNow();
+    }
+
+    function resetToToday() {
+      selectedDateOffset = 0;
+      updateHeader();
+      renderHourMarks();
+      fetchEvents();
+      scrollToNow();
+    }
+
+    function scrollToNow() {
+      const scrollArea = document.getElementById('scrollArea');
+      if (!scrollArea) return;
+
+      if (selectedDateOffset !== 0) {
+        scrollArea.scrollTop = 0;
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const now = new Date();
+          const topPos = timeToPixels(now);
+          const targetScroll = topPos - (scrollArea.clientHeight / 2);
+          scrollArea.scrollTop = Math.max(0, targetScroll);
+        }, 50);
+      });
+    }
+
+    function updateNowIndicator() {
+      const now = new Date();
+      const indicator = document.getElementById('nowIndicator');
+
+      if (selectedDateOffset === 0) {
+        indicator.style.display = 'flex';
+        const topPos = timeToPixels(now);
+        indicator.style.top = `${topPos}px`;
+
+        const timeStr = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('nowTimeText').textContent = timeStr;
+      } else {
+        indicator.style.display = 'none';
+      }
+    }
+
+    async function fetchEvents() {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + selectedDateOffset);
+
+      const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0).toISOString();
+      const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59).toISOString();
+
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?timeMin=${startOfDay}&timeMax=${endOfDay}&singleEvents=true&orderBy=startTime&key=${API_KEY}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        cachedEvents = data.items || [];
+        renderEvents(cachedEvents);
+        scrollToNow();
+      } catch (err) {
+        console.error("Kunde inte hämta kalenderdata:", err);
+      }
+    }
+
+    function renderEvents(events) {
+      const container = document.getElementById('eventsContainer');
+      container.innerHTML = '';
+      const now = new Date();
+
+      events.forEach(event => {
+        if (!event.start.dateTime) return;
+
+        const start = new Date(event.start.dateTime);
+        const end = new Date(event.end.dateTime);
+
+        const topPos = timeToPixels(start);
+        const bottomPos = timeToPixels(end);
+        const height = Math.max(110, bottomPos - topPos);
+
+        const card = document.createElement('div');
+        card.style.top = `${topPos}px`;
+        card.style.height = `${height}px`;
+
+        const startTimeStr = start.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+        const imgUrl = getCustomImage(event.summary);
+
+        let stateClass = '';
+        let rightBadgeHtml = '';
+
+        if (selectedDateOffset === 0 && now > end) {
+          stateClass = 'state-passed';
+          rightBadgeHtml = `<div class="check-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+        } else if (selectedDateOffset === 0 && now >= start && now <= end) {
+          stateClass = 'state-active';
+        } else {
+          stateClass = 'state-upcoming';
+          if (selectedDateOffset === 0 && now < start) {
+            const diffMs = start - now;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            let timeStr = '';
+            if (diffHours > 0) {
+              timeStr = `om ${diffHours}h ${diffMins}m`;
+            } else {
+              timeStr = `om ${diffMins}m`;
+            }
+
+            rightBadgeHtml = `<div class="countdown-text">${timeStr}</div>`;
+          }
+        }
+
+        card.className = `event-card ${stateClass}`;
+
+        card.innerHTML = `
+          <img class="event-img" src="${imgUrl}" alt="${event.summary || 'Aktivitet'}" onerror="this.src='https://api.iconify.design/noto:calendar.svg'">
+          <div class="event-info">
+            <div class="event-time">${startTimeStr}</div>
+            <div class="event-title">${event.summary || 'Aktivitet'}</div>
+          </div>
+          ${rightBadgeHtml}
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    renderHourMarks();
+    updateHeader();
+    updateNowIndicator();
+    fetchEvents();
+
+    setInterval(() => {
+      updateNowIndicator();
+      renderHourMarks();
+      if (cachedEvents.length > 0) {
+        renderEvents(cachedEvents);
+      }
+    }, 1000);
+
+    setInterval(fetchEvents, 60000);
+  </script>
+</body>
+</html>
