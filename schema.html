@@ -198,7 +198,7 @@
       margin-left: 10px;
     }
 
-    /* 5-MINUTERS PRICKAR (FLYTTADE TILL HÖGER TILL LEFT: 110PX) */
+    /* 5-MINUTERS PRICKAR */
     .minute-dots-container {
       position: absolute;
       left: 110px;
@@ -235,7 +235,7 @@
       background-color: var(--color-red);
     }
 
-    /* "JUST NU"-PIL (ANPASSAD TILL PRICKARNA) */
+    /* "JUST NU"-PIL */
     .now-indicator {
       position: absolute;
       left: 95px;
@@ -531,7 +531,6 @@
         font-size: 15px;
       }
 
-      /* Mobil: Prickarna förskjutna till höger */
       .minute-dots-container {
         left: 68px;
         width: 8px;
@@ -542,7 +541,6 @@
         height: 4px;
       }
 
-      /* Mobil: Pil förskjuten */
       .now-indicator {
         left: 54px;
       }
@@ -729,17 +727,21 @@
       return typeof DEFAULT_IMAGE !== 'undefined' ? DEFAULT_IMAGE : '';
     }
 
+    // BERÄKNAR DAGAR, TIMMAR, MINUTER OCH SEKUNDER
     function getRemainingTimeParts(targetDate) {
       const now = new Date();
       const diffMs = targetDate - now;
       if (diffMs <= 0) return null;
 
-      const diffMinsTotal = Math.floor(diffMs / (1000 * 60));
-      const days = Math.floor(diffMinsTotal / (60 * 24));
-      const hours = Math.floor((diffMinsTotal % (60 * 24)) / 60);
-      const mins = diffMinsTotal % 60;
+      const totalSecs = Math.floor(diffMs / 1000);
+      const totalMins = Math.floor(totalSecs / 60);
 
-      return { days, hours, mins };
+      const days = Math.floor(totalMins / (60 * 24));
+      const hours = Math.floor((totalMins % (60 * 24)) / 60);
+      const mins = totalMins % 60;
+      const secs = totalSecs % 60;
+
+      return { days, hours, mins, secs, totalSecs };
     }
 
     function timeToPixels(date) {
@@ -979,9 +981,18 @@
             const timeParts = getRemainingTimeParts(start);
             if (timeParts) {
               let timeStr = 'om ';
-              if (timeParts.days > 0) timeStr += `${timeParts.days}d `;
-              if (timeParts.hours > 0 || timeParts.days > 0) timeStr += `${timeParts.hours}h `;
-              timeStr += `${timeParts.mins}m`;
+              if (timeParts.days > 0) {
+                timeStr += `${timeParts.days}d `;
+                if (timeParts.hours > 0) timeStr += `${timeParts.hours}h `;
+                timeStr += `${timeParts.mins}m`;
+              } else if (timeParts.hours > 0) {
+                timeStr += `${timeParts.hours}h ${timeParts.mins}m`;
+              } else if (timeParts.mins > 0) {
+                timeStr += `${timeParts.mins}m`;
+              } else {
+                // MINDRE ÄN 1 MINUT KVAR: Visa sekunder!
+                timeStr += `${timeParts.secs}s`;
+              }
 
               rightBadgeHtml = `<div class="countdown-text">${timeStr}</div>`;
             }
@@ -1047,9 +1058,18 @@
         const timeParts = getRemainingTimeParts(start);
         if (timeParts) {
           let timeStr = 'om ';
-          if (timeParts.days > 0) timeStr += `${timeParts.days} dag${timeParts.days > 1 ? 'ar' : ''} `;
-          if (timeParts.hours > 0 || timeParts.days > 0) timeStr += `${timeParts.hours} tim `;
-          timeStr += `${timeParts.mins} min`;
+          if (timeParts.days > 0) {
+            timeStr += `${timeParts.days} dag${timeParts.days > 1 ? 'ar' : ''} `;
+            if (timeParts.hours > 0) timeStr += `${timeParts.hours} tim `;
+            timeStr += `${timeParts.mins} min`;
+          } else if (timeParts.hours > 0) {
+            timeStr += `${timeParts.hours} tim ${timeParts.mins} min`;
+          } else if (timeParts.mins > 0) {
+            timeStr += `${timeParts.mins} minuter`;
+          } else {
+            // MINDRE ÄN 1 MINUT KVAR: Visa sekunder!
+            timeStr += `${timeParts.secs} sekunder`;
+          }
 
           statusContainer.innerHTML = `<div class="modal-countdown">${timeStr}</div>`;
         }
