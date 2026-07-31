@@ -169,7 +169,7 @@
 
     .timeline-container {
       position: relative;
-      height: 2200px; /* Anpassad för 06:00 - 22:00 */
+      height: 2200px;
       width: 100%;
     }
 
@@ -236,11 +236,13 @@
     /* BASE EVENT CARD */
     .event-card {
       position: absolute;
+      left: 235px;
+      right: 0px;
       border-radius: 20px;
-      padding: 12px 16px;
+      padding: 14px 24px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
       z-index: 10;
       box-shadow: var(--figma-shadow);
       transition: all 0.3s ease;
@@ -256,7 +258,7 @@
     }
 
     .event-card.state-passed .event-title {
-      font-size: 22px;
+      font-size: 26px;
       font-weight: 400;
       color: var(--color-gray);
     }
@@ -271,8 +273,8 @@
 
     .check-icon {
       margin-left: auto;
-      width: 40px;
-      height: 40px;
+      width: 48px;
+      height: 48px;
       background: var(--color-green);
       border-radius: 50%;
       display: flex;
@@ -290,7 +292,7 @@
     }
 
     .event-card.state-active .event-title {
-      font-size: 28px;
+      font-size: 34px;
       font-weight: 700;
       color: var(--color-dark);
     }
@@ -301,22 +303,22 @@
     }
 
     .event-card.state-upcoming .event-title {
-      font-size: 22px;
+      font-size: 26px;
       font-weight: 400;
       color: var(--color-dark);
     }
 
     .countdown-text {
       margin-left: auto;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 400;
       color: var(--color-red);
       flex-shrink: 0;
     }
 
     .event-img {
-      width: 80px;
-      height: 80px;
+      width: 96px;
+      height: 96px;
       object-fit: contain;
       flex-shrink: 0;
     }
@@ -324,18 +326,11 @@
     .event-info {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      overflow: hidden;
-    }
-
-    .event-title {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      gap: 4px;
     }
 
     .event-time {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 400;
       color: var(--color-blue);
     }
@@ -362,6 +357,106 @@
       width: 40px;
       height: 40px;
       object-fit: contain;
+    }
+
+    /* ========================================================= */
+    /* MOBILANPASSNING (SKÄRM BREDD UNDER 600PX)                */
+    /* ========================================================= */
+    @media (max-width: 600px) {
+      header.day-header {
+        padding: 16px 16px 12px 16px;
+      }
+
+      .day-title {
+        font-size: 28px;
+      }
+
+      .day-badge-img {
+        width: 36px;
+        height: 36px;
+      }
+
+      .date-subtitle {
+        font-size: 15px;
+        margin-top: 2px;
+      }
+
+      .nav-btn svg {
+        width: 36px;
+        height: 36px;
+      }
+
+      .timeline-scroll-area {
+        padding: 16px 12px 80px 12px;
+      }
+
+      .hour-label {
+        width: 50px;
+        font-size: 15px;
+      }
+
+      .hour-dot {
+        width: 12px;
+        height: 12px;
+        margin-right: 6px;
+      }
+
+      /* Flytta pilen så den passar smala skärmar */
+      .now-indicator {
+        left: 42px;
+      }
+
+      .now-arrow-svg {
+        width: 100px;
+      }
+
+      /* Flytta korten så de utnyttjar hela mobilbredden */
+      .event-card {
+        left: 115px !important;
+        right: 0px !important;
+        padding: 8px 12px;
+        gap: 10px;
+        border-radius: 14px;
+      }
+
+      .event-img {
+        width: 56px;
+        height: 56px;
+      }
+
+      .event-card.state-active .event-title {
+        font-size: 20px;
+      }
+
+      .event-card.state-upcoming .event-title,
+      .event-card.state-passed .event-title {
+        font-size: 17px;
+      }
+
+      .event-time {
+        font-size: 13px;
+      }
+
+      .countdown-text {
+        font-size: 13px;
+      }
+
+      .check-icon {
+        width: 34px;
+        height: 34px;
+      }
+
+      .home-indicator {
+        bottom: 16px;
+        left: 16px;
+        width: 50px;
+        height: 50px;
+      }
+
+      .home-indicator img {
+        width: 30px;
+        height: 30px;
+      }
     }
   </style>
 </head>
@@ -440,8 +535,6 @@
 
     let selectedDateOffset = 0;
     let cachedEvents = [];
-    
-    // TIDSLINJE FRÅN 06:00 TILL 22:00
     const DAY_START_HOUR = 6;
     const DAY_END_HOUR = 22; 
     const TOTAL_MINUTES = (DAY_END_HOUR - DAY_START_HOUR) * 60;
@@ -599,91 +692,38 @@
       }
     }
 
-    function calculateOverlaps(validEvents) {
-      const processed = validEvents.map(e => ({
-        ...e,
-        startDate: new Date(e.start.dateTime),
-        endDate: new Date(e.end.dateTime),
-        col: 0,
-        totalCols: 1
-      }));
-
-      processed.sort((a, b) => a.startDate - b.startDate);
-
-      const groups = [];
-      let currentGroup = [];
-      let groupEnd = null;
-
-      processed.forEach(ev => {
-        if (!groupEnd || ev.startDate < groupEnd) {
-          currentGroup.push(ev);
-          if (!groupEnd || ev.endDate > groupEnd) {
-            groupEnd = ev.endDate;
-          }
-        } else {
-          groups.push(currentGroup);
-          currentGroup = [ev];
-          groupEnd = ev.endDate;
-        }
-      });
-      if (currentGroup.length > 0) groups.push(currentGroup);
-
-      groups.forEach(group => {
-        const columns = [];
-        group.forEach(ev => {
-          let placed = false;
-          for (let i = 0; i < columns.length; i++) {
-            if (columns[i][columns[i].length - 1].endDate <= ev.startDate) {
-              columns[i].push(ev);
-              ev.col = i;
-              placed = true;
-              break;
-            }
-          }
-          if (!placed) {
-            columns.push([ev]);
-            ev.col = columns.length - 1;
-          }
-        });
-        const numCols = columns.length;
-        group.forEach(ev => ev.totalCols = numCols);
-      });
-
-      return processed;
-    }
-
     function renderEvents(events) {
       const container = document.getElementById('eventsContainer');
       container.innerHTML = '';
       const now = new Date();
 
-      const validEvents = events.filter(e => e.start && e.start.dateTime);
-      const layoutEvents = calculateOverlaps(validEvents);
+      const validEvents = events
+        .filter(e => e.start && e.start.dateTime)
+        .sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime));
 
-      const baseLeft = 235;
-      const totalWidthOffset = 16;
+      let lastTopPos = -999;
+      let offsetStep = 0;
 
-      layoutEvents.forEach(event => {
-        const start = event.startDate;
-        const end = event.endDate;
+      validEvents.forEach((event, index) => {
+        const start = new Date(event.start.dateTime);
+        const end = new Date(event.end.dateTime);
 
-        const topPos = timeToPixels(start);
+        let topPos = timeToPixels(start);
         const bottomPos = timeToPixels(end);
-        const height = Math.max(110, bottomPos - topPos);
+        const height = Math.max(80, bottomPos - topPos);
+
+        if (Math.abs(topPos - lastTopPos) < 40) {
+          offsetStep += 1;
+          topPos += offsetStep * 30;
+        } else {
+          offsetStep = 0;
+        }
+        lastTopPos = topPos;
 
         const card = document.createElement('div');
         card.style.top = `${topPos}px`;
         card.style.height = `${height}px`;
-
-        if (event.totalCols > 1) {
-          const colWidthPercent = 100 / event.totalCols;
-          const leftPercent = event.col * colWidthPercent;
-          card.style.left = `calc(${baseLeft}px + (100% - ${baseLeft + totalWidthOffset}px) * ${leftPercent / 100})`;
-          card.style.width = `calc((100% - ${baseLeft + totalWidthOffset}px) * ${colWidthPercent / 100} - 8px)`;
-        } else {
-          card.style.left = `${baseLeft}px`;
-          card.style.right = '0px';
-        }
+        card.style.zIndex = 10 + index;
 
         const startTimeStr = start.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
         const imgUrl = getCustomImage(event.summary);
