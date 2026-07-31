@@ -1,8 +1,8 @@
 // Här lägger du enkelt till nya ord och bilder
 const IMAGE_BANK = {
   'frukost': 'bilder/frukost.png',
-  'buss': 'bilder/aka_buss.png',
   'åka buss': 'bilder/buss.png',
+  'buss': 'bilder/aka_buss.png',
   'pizza': 'bilder/pizza.png',
   'mellis': 'bilder/mellis.png',
   'lunch': 'bilder/lunch.png',
