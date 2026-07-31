@@ -167,9 +167,10 @@
       color: var(--color-dark);
     }
 
+    /* HÖJDEN HÖJD TILL 3600PX FOR ATT VISA CA 4 TIMMAR I VIEWPORT */
     .timeline-container {
       position: relative;
-      height: 2400px;
+      height: 3600px;
       width: 100%;
     }
 
@@ -186,14 +187,14 @@
 
     .hour-label {
       width: 80px;
-      font-size: 20px;
-      font-weight: 400;
+      font-size: 24px;
+      font-weight: 700;
       color: var(--color-dark);
     }
 
     .hour-line {
       flex: 1;
-      height: 1.5px;
+      height: 2px;
       background-color: rgba(17, 24, 39, 0.2);
       margin-left: 10px;
     }
@@ -212,8 +213,8 @@
     .minute-dot {
       position: absolute;
       left: 50%;
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       transform: translate(-50%, -50%);
       transition: background-color 0.3s ease;
@@ -254,16 +255,16 @@
       overflow: visible;
     }
 
-    /* BASE EVENT CARD */
+    /* BASE EVENT CARD - STÖRRE OCH LUFTIGARE */
     .event-card {
       position: absolute;
       left: 255px;
       right: 0px;
-      border-radius: 20px;
-      padding: 14px 24px;
+      border-radius: 24px;
+      padding: 16px 28px;
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 24px;
       z-index: 10;
       box-shadow: var(--figma-shadow);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -284,7 +285,7 @@
     }
 
     .event-card.state-passed .event-title {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 400;
       color: var(--color-gray);
     }
@@ -299,8 +300,8 @@
 
     .check-icon {
       margin-left: auto;
-      width: 48px;
-      height: 48px;
+      width: 54px;
+      height: 54px;
       background: var(--color-green);
       border-radius: 50%;
       display: flex;
@@ -318,7 +319,7 @@
     }
 
     .event-card.state-active .event-title {
-      font-size: 34px;
+      font-size: 36px;
       font-weight: 700;
       color: var(--color-dark);
     }
@@ -329,22 +330,23 @@
     }
 
     .event-card.state-upcoming .event-title {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 400;
       color: var(--color-dark);
     }
 
     .countdown-text {
       margin-left: auto;
-      font-size: 18px;
-      font-weight: 400;
+      font-size: 20px;
+      font-weight: 700;
       color: var(--color-red);
       flex-shrink: 0;
     }
 
+    /* STÖRRE BILDER PÅ KORTEN (120PX) */
     .event-img {
-      width: 96px;
-      height: 96px;
+      width: 120px;
+      height: 120px;
       object-fit: contain;
       flex-shrink: 0;
     }
@@ -352,17 +354,17 @@
     .event-info {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
 
     .event-time {
-      font-size: 16px;
-      font-weight: 400;
+      font-size: 18px;
+      font-weight: 700;
       color: var(--color-blue);
     }
 
-    /* FOOTER / HEM-IKON */
-    .home-indicator {
+    /* FOOTER / DYNAMISK HÖRNKNAPP */
+    .corner-action-btn {
       position: fixed;
       bottom: 24px;
       left: 32px;
@@ -372,16 +374,22 @@
       background: #FFFFFF;
       border: 2px solid var(--color-dark);
       border-radius: 12px;
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: var(--figma-shadow);
       cursor: pointer;
+      transition: transform 0.15s ease;
     }
 
-    .home-indicator img {
-      width: 40px;
-      height: 40px;
+    .corner-action-btn:active {
+      transform: scale(0.92);
+    }
+
+    .corner-action-btn img, 
+    .corner-action-btn svg {
+      width: 36px;
+      height: 36px;
       object-fit: contain;
     }
 
@@ -453,21 +461,21 @@
     }
 
     .modal-img {
-      width: 160px;
-      height: 160px;
+      width: 180px;
+      height: 180px;
       object-fit: contain;
       margin-bottom: 24px;
     }
 
     .modal-time-badge {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
       color: var(--color-blue);
       margin-bottom: 8px;
     }
 
     .modal-title {
-      font-size: 38px;
+      font-size: 40px;
       font-weight: 700;
       color: var(--color-dark);
       line-height: 1.2;
@@ -528,7 +536,7 @@
 
       .hour-label {
         width: 50px;
-        font-size: 15px;
+        font-size: 16px;
       }
 
       .minute-dots-container {
@@ -537,8 +545,8 @@
       }
 
       .minute-dot {
-        width: 4px;
-        height: 4px;
+        width: 5px;
+        height: 5px;
       }
 
       .now-indicator {
@@ -552,48 +560,49 @@
       .event-card {
         left: 125px !important;
         right: 0px !important;
-        padding: 8px 12px;
-        gap: 10px;
-        border-radius: 14px;
+        padding: 10px 14px;
+        gap: 12px;
+        border-radius: 16px;
       }
 
       .event-img {
-        width: 56px;
-        height: 56px;
+        width: 64px;
+        height: 64px;
       }
 
       .event-card.state-active .event-title {
-        font-size: 20px;
+        font-size: 22px;
       }
 
       .event-card.state-upcoming .event-title,
       .event-card.state-passed .event-title {
-        font-size: 17px;
+        font-size: 18px;
       }
 
       .event-time {
-        font-size: 13px;
+        font-size: 14px;
       }
 
       .countdown-text {
-        font-size: 13px;
+        font-size: 14px;
       }
 
       .check-icon {
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
       }
 
-      .home-indicator {
+      .corner-action-btn {
         bottom: 16px;
         left: 16px;
         width: 50px;
         height: 50px;
       }
 
-      .home-indicator img {
-        width: 30px;
-        height: 30px;
+      .corner-action-btn img,
+      .corner-action-btn svg {
+        width: 28px;
+        height: 28px;
       }
 
       .modal-content {
@@ -601,12 +610,12 @@
       }
 
       .modal-img {
-        width: 120px;
-        height: 120px;
+        width: 140px;
+        height: 140px;
       }
 
       .modal-title {
-        font-size: 28px;
+        font-size: 30px;
       }
 
       .modal-countdown {
@@ -668,9 +677,9 @@
 
     </div>
 
-    <!-- HEM-IKON -->
-    <div class="home-indicator" id="homeIndicator" onclick="resetToToday()">
-      <img src="bilder/hem.png" alt="Hem" onerror="this.parentNode.innerHTML='<svg width=36 height=36 viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#111827\' stroke-width=\'2\'><path d=\'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\'/></svg>'">
+    <!-- HÖRNKNAPP (DYNAMISK: REFRESH ELLER HEM) -->
+    <div class="corner-action-btn" id="cornerBtn" onclick="handleCornerClick()">
+      <!-- Innehåll ställs in dynamiskt via JS -->
     </div>
 
   </div>
@@ -727,7 +736,6 @@
       return typeof DEFAULT_IMAGE !== 'undefined' ? DEFAULT_IMAGE : '';
     }
 
-    // BERÄKNAR DAGAR, TIMMAR, MINUTER OCH SEKUNDER
     function getRemainingTimeParts(targetDate) {
       const now = new Date();
       const diffMs = targetDate - now;
@@ -749,7 +757,7 @@
       const minutes = date.getMinutes();
       const currentMin = (hours * 60) + minutes - (DAY_START_HOUR * 60);
       const container = document.getElementById('timelineContainer');
-      const containerHeight = container ? container.offsetHeight : 2400;
+      const containerHeight = container ? container.offsetHeight : 3600;
       const percentage = currentMin / TOTAL_MINUTES;
       return Math.max(0, Math.min(containerHeight, percentage * containerHeight));
     }
@@ -837,20 +845,33 @@
       document.getElementById('dateSubtitle').innerText = targetDate.toLocaleDateString('sv-SE', dateOptions);
 
       const dayTitle = document.getElementById('dayTitle');
-      const homeIndicator = document.getElementById('homeIndicator');
+      const cornerBtn = document.getElementById('cornerBtn');
 
       if (selectedDateOffset === 0) {
         dayTitle.innerText = `Idag ${pecs.name}`;
-        homeIndicator.style.display = 'none';
-      } else if (selectedDateOffset === 1) {
-        dayTitle.innerText = `Imorgon ${pecs.name}`;
-        homeIndicator.style.display = 'flex';
+        cornerBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6"/>
+            <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 0.8a10 10 0 0 0 18.8-4.3"/>
+          </svg>`;
       } else {
-        dayTitle.innerText = pecs.name.charAt(0).toUpperCase() + pecs.name.slice(1);
-        homeIndicator.style.display = 'flex';
+        if (selectedDateOffset === 1) {
+          dayTitle.innerText = `Imorgon ${pecs.name}`;
+        } else {
+          dayTitle.innerText = pecs.name.charAt(0).toUpperCase() + pecs.name.slice(1);
+        }
+        cornerBtn.innerHTML = `<img src="bilder/hem.png" alt="Hem" onerror="this.parentNode.innerHTML='<svg width=36 height=36 viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#111827\' stroke-width=\'2.5\'><path d=\'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\'/></svg>'">`;
       }
 
       document.getElementById('prevDayBtn').disabled = (selectedDateOffset <= 0);
+    }
+
+    function handleCornerClick() {
+      if (selectedDateOffset === 0) {
+        window.location.reload();
+      } else {
+        resetToToday();
+      }
     }
 
     function changeDay(delta) {
@@ -947,11 +968,11 @@
 
         let topPos = timeToPixels(start);
         const bottomPos = timeToPixels(end);
-        const height = Math.max(80, bottomPos - topPos);
+        const height = Math.max(110, bottomPos - topPos); // Höjd till 110px
 
-        if (Math.abs(topPos - lastTopPos) < 40) {
+        if (Math.abs(topPos - lastTopPos) < 50) {
           offsetStep += 1;
-          topPos += offsetStep * 30;
+          topPos += offsetStep * 35;
         } else {
           offsetStep = 0;
         }
@@ -972,7 +993,7 @@
 
         if (selectedDateOffset === 0 && now > end) {
           stateClass = 'state-passed';
-          rightBadgeHtml = `<div class="check-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+          rightBadgeHtml = `<div class="check-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>`;
         } else if (selectedDateOffset === 0 && now >= start && now <= end) {
           stateClass = 'state-active';
         } else {
@@ -990,7 +1011,6 @@
               } else if (timeParts.mins > 0) {
                 timeStr += `${timeParts.mins}m`;
               } else {
-                // MINDRE ÄN 1 MINUT KVAR: Visa sekunder!
                 timeStr += `${timeParts.secs}s`;
               }
 
@@ -1067,7 +1087,6 @@
           } else if (timeParts.mins > 0) {
             timeStr += `${timeParts.mins} minuter`;
           } else {
-            // MINDRE ÄN 1 MINUT KVAR: Visa sekunder!
             timeStr += `${timeParts.secs} sekunder`;
           }
 
