@@ -7,7 +7,6 @@ const IMAGE_BANK = {
   'mellis': 'bilder/mellis.png',
   'lunch': 'bilder/lunch.png',
   'skola': 'bilder/skola.png',
-  'hem': 'bilder/hem.png',
   'bada': 'bilder/bada.png',
   'handla': 'bilder/handla.png',
   'padda': 'bilder/padda.png',
@@ -18,7 +17,9 @@ const IMAGE_BANK = {
   'snacks': 'bilder/snacks.png',
   'middag': 'bilder/middag.png',
   'mamma': 'bilder/mamma.png',
-  'pappa': 'bilder/pappa.png'
+  'pappa': 'bilder/pappa.png',
+  'hem': 'bilder/hem.png'
+  
 };
 
 // Bilden som används om inget ord matchar

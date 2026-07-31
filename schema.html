@@ -27,9 +27,6 @@
       
       /* Figma Skugga: X=3, Y=3, Blur=0, Spread=0, 25% Svart */
       --figma-shadow: 3px 3px 0px rgba(0, 0, 0, 0.25);
-
-      --timeline-hour-start: 6;
-      --timeline-hour-end: 20;
     }
 
     * {
@@ -172,7 +169,7 @@
 
     .timeline-container {
       position: relative;
-      height: 1800px;
+      height: 2200px; /* Anpassad för 06:00 - 22:00 */
       width: 100%;
     }
 
@@ -239,13 +236,11 @@
     /* BASE EVENT CARD */
     .event-card {
       position: absolute;
-      left: 235px;
-      right: 0px;
       border-radius: 20px;
-      padding: 14px 24px;
+      padding: 12px 16px;
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       z-index: 10;
       box-shadow: var(--figma-shadow);
       transition: all 0.3s ease;
@@ -261,7 +256,7 @@
     }
 
     .event-card.state-passed .event-title {
-      font-size: 26px;
+      font-size: 22px;
       font-weight: 400;
       color: var(--color-gray);
     }
@@ -276,8 +271,8 @@
 
     .check-icon {
       margin-left: auto;
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       background: var(--color-green);
       border-radius: 50%;
       display: flex;
@@ -295,7 +290,7 @@
     }
 
     .event-card.state-active .event-title {
-      font-size: 34px;
+      font-size: 28px;
       font-weight: 700;
       color: var(--color-dark);
     }
@@ -306,22 +301,22 @@
     }
 
     .event-card.state-upcoming .event-title {
-      font-size: 26px;
+      font-size: 22px;
       font-weight: 400;
       color: var(--color-dark);
     }
 
     .countdown-text {
       margin-left: auto;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 400;
       color: var(--color-red);
       flex-shrink: 0;
     }
 
     .event-img {
-      width: 96px;
-      height: 96px;
+      width: 80px;
+      height: 80px;
       object-fit: contain;
       flex-shrink: 0;
     }
@@ -329,11 +324,18 @@
     .event-info {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .event-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .event-time {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 400;
       color: var(--color-blue);
     }
@@ -438,15 +440,16 @@
 
     let selectedDateOffset = 0;
     let cachedEvents = [];
+    
+    // TIDSLINJE FRÅN 06:00 TILL 22:00
     const DAY_START_HOUR = 6;
-    const DAY_END_HOUR = 20;
+    const DAY_END_HOUR = 22; 
     const TOTAL_MINUTES = (DAY_END_HOUR - DAY_START_HOUR) * 60;
 
     function getCustomImage(title) {
       if (!title) return typeof DEFAULT_IMAGE !== 'undefined' ? DEFAULT_IMAGE : '';
       const lower = title.toLowerCase();
       
-      // Använder IMAGE_BANK från bildbank.js
       if (typeof IMAGE_BANK !== 'undefined') {
         for (const [key, url] of Object.entries(IMAGE_BANK)) {
           if (lower.includes(key)) return url;
@@ -460,7 +463,7 @@
       const minutes = date.getMinutes();
       const currentMin = (hours * 60) + minutes - (DAY_START_HOUR * 60);
       const container = document.getElementById('timelineContainer');
-      const containerHeight = container ? container.offsetHeight : 1800;
+      const containerHeight = container ? container.offsetHeight : 2200;
       const percentage = currentMin / TOTAL_MINUTES;
       return Math.max(0, Math.min(containerHeight, percentage * containerHeight));
     }
@@ -596,16 +599,73 @@
       }
     }
 
+    function calculateOverlaps(validEvents) {
+      const processed = validEvents.map(e => ({
+        ...e,
+        startDate: new Date(e.start.dateTime),
+        endDate: new Date(e.end.dateTime),
+        col: 0,
+        totalCols: 1
+      }));
+
+      processed.sort((a, b) => a.startDate - b.startDate);
+
+      const groups = [];
+      let currentGroup = [];
+      let groupEnd = null;
+
+      processed.forEach(ev => {
+        if (!groupEnd || ev.startDate < groupEnd) {
+          currentGroup.push(ev);
+          if (!groupEnd || ev.endDate > groupEnd) {
+            groupEnd = ev.endDate;
+          }
+        } else {
+          groups.push(currentGroup);
+          currentGroup = [ev];
+          groupEnd = ev.endDate;
+        }
+      });
+      if (currentGroup.length > 0) groups.push(currentGroup);
+
+      groups.forEach(group => {
+        const columns = [];
+        group.forEach(ev => {
+          let placed = false;
+          for (let i = 0; i < columns.length; i++) {
+            if (columns[i][columns[i].length - 1].endDate <= ev.startDate) {
+              columns[i].push(ev);
+              ev.col = i;
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) {
+            columns.push([ev]);
+            ev.col = columns.length - 1;
+          }
+        });
+        const numCols = columns.length;
+        group.forEach(ev => ev.totalCols = numCols);
+      });
+
+      return processed;
+    }
+
     function renderEvents(events) {
       const container = document.getElementById('eventsContainer');
       container.innerHTML = '';
       const now = new Date();
 
-      events.forEach(event => {
-        if (!event.start.dateTime) return;
+      const validEvents = events.filter(e => e.start && e.start.dateTime);
+      const layoutEvents = calculateOverlaps(validEvents);
 
-        const start = new Date(event.start.dateTime);
-        const end = new Date(event.end.dateTime);
+      const baseLeft = 235;
+      const totalWidthOffset = 16;
+
+      layoutEvents.forEach(event => {
+        const start = event.startDate;
+        const end = event.endDate;
 
         const topPos = timeToPixels(start);
         const bottomPos = timeToPixels(end);
@@ -615,6 +675,16 @@
         card.style.top = `${topPos}px`;
         card.style.height = `${height}px`;
 
+        if (event.totalCols > 1) {
+          const colWidthPercent = 100 / event.totalCols;
+          const leftPercent = event.col * colWidthPercent;
+          card.style.left = `calc(${baseLeft}px + (100% - ${baseLeft + totalWidthOffset}px) * ${leftPercent / 100})`;
+          card.style.width = `calc((100% - ${baseLeft + totalWidthOffset}px) * ${colWidthPercent / 100} - 8px)`;
+        } else {
+          card.style.left = `${baseLeft}px`;
+          card.style.right = '0px';
+        }
+
         const startTimeStr = start.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
         const imgUrl = getCustomImage(event.summary);
 
@@ -623,7 +693,7 @@
 
         if (selectedDateOffset === 0 && now > end) {
           stateClass = 'state-passed';
-          rightBadgeHtml = `<div class="check-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+          rightBadgeHtml = `<div class="check-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>`;
         } else if (selectedDateOffset === 0 && now >= start && now <= end) {
           stateClass = 'state-active';
         } else {
