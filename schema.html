@@ -135,7 +135,7 @@
     .timeline-scroll-area {
       flex: 1;
       overflow-y: auto;
-      padding: 32px 32px 120px 32px;
+      padding: 32px 32px 250px 32px;
       position: relative;
       width: 100%;
       background-color: var(--current-day-bg);
@@ -169,7 +169,7 @@
 
     .timeline-container {
       position: relative;
-      height: 2200px;
+      height: 2400px;
       width: 100%;
     }
 
@@ -245,10 +245,15 @@
       gap: 20px;
       z-index: 10;
       box-shadow: var(--figma-shadow);
-      transition: all 0.3s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
       overflow: hidden;
       box-sizing: border-box;
       border: 3px solid transparent;
+      cursor: pointer;
+    }
+
+    .event-card:active {
+      transform: scale(0.98);
     }
 
     .event-card.state-passed {
@@ -335,7 +340,7 @@
       color: var(--color-blue);
     }
 
-    /* FOOTER / HEM-IKON (DÖLJS SOM STANDARD) */
+    /* FOOTER / HEM-IKON */
     .home-indicator {
       position: fixed;
       bottom: 24px;
@@ -346,7 +351,7 @@
       background: #FFFFFF;
       border: 2px solid var(--color-dark);
       border-radius: 12px;
-      display: none; /* Döljs automatiskt på "idag" */
+      display: none;
       align-items: center;
       justify-content: center;
       box-shadow: var(--figma-shadow);
@@ -357,6 +362,120 @@
       width: 40px;
       height: 40px;
       object-fit: contain;
+    }
+
+    /* ========================================================= */
+    /* MODAL / POPUP-FÖNSTER                                     */
+    /* ========================================================= */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(17, 24, 39, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #FFFFFF;
+      width: 100%;
+      max-width: 520px;
+      border-radius: 32px;
+      border: 4px solid var(--color-dark);
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.3);
+      transform: scale(0.9);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-backdrop.open .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 48px;
+      height: 48px;
+      background: rgba(17, 24, 39, 0.08);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close-btn svg {
+      width: 28px;
+      height: 28px;
+      stroke: var(--color-dark);
+      stroke-width: 3;
+    }
+
+    .modal-img {
+      width: 160px;
+      height: 160px;
+      object-fit: contain;
+      margin-bottom: 24px;
+    }
+
+    .modal-time-badge {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-blue);
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-size: 38px;
+      font-weight: 700;
+      color: var(--color-dark);
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .modal-countdown {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-red);
+      background: #FFF0F0;
+      padding: 12px 28px;
+      border-radius: 50px;
+      border: 2px solid var(--color-red);
+    }
+
+    .modal-passed-badge {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-green);
+      background: #E5FBDF;
+      padding: 12px 28px;
+      border-radius: 50px;
+      border: 2px solid var(--color-green);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     /* MOBILANPASSNING (SKÄRM BREDD UNDER 600PX) */
@@ -385,7 +504,7 @@
       }
 
       .timeline-scroll-area {
-        padding: 16px 12px 80px 12px;
+        padding: 16px 12px 250px 12px;
       }
 
       .hour-label {
@@ -453,6 +572,24 @@
         width: 30px;
         height: 30px;
       }
+
+      .modal-content {
+        padding: 32px 20px;
+      }
+
+      .modal-img {
+        width: 120px;
+        height: 120px;
+      }
+
+      .modal-title {
+        font-size: 28px;
+      }
+
+      .modal-countdown {
+        font-size: 22px;
+        padding: 10px 20px;
+      }
     }
   </style>
 </head>
@@ -511,6 +648,20 @@
 
   </div>
 
+  <!-- MODAL / POPUP -->
+  <div class="modal-backdrop" id="eventModal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-content">
+      <button class="modal-close-btn" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
+      </button>
+
+      <img class="modal-img" id="modalImg" src="" alt="Aktivitet">
+      <div class="modal-time-badge" id="modalTime">19:00</div>
+      <h2 class="modal-title" id="modalTitle">Aktivitet</h2>
+      <div id="modalStatusContainer"></div>
+    </div>
+  </div>
+
   <script>
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
@@ -531,8 +682,10 @@
 
     let selectedDateOffset = 0;
     let cachedEvents = [];
+    let activeModalEvent = null;
+
     const DAY_START_HOUR = 6;
-    const DAY_END_HOUR = 22; 
+    const DAY_END_HOUR = 23; 
     const TOTAL_MINUTES = (DAY_END_HOUR - DAY_START_HOUR) * 60;
 
     function getCustomImage(title) {
@@ -552,7 +705,7 @@
       const minutes = date.getMinutes();
       const currentMin = (hours * 60) + minutes - (DAY_START_HOUR * 60);
       const container = document.getElementById('timelineContainer');
-      const containerHeight = container ? container.offsetHeight : 2200;
+      const containerHeight = container ? container.offsetHeight : 2400;
       const percentage = currentMin / TOTAL_MINUTES;
       return Math.max(0, Math.min(containerHeight, percentage * containerHeight));
     }
@@ -609,13 +762,13 @@
 
       if (selectedDateOffset === 0) {
         dayTitle.innerText = `Idag ${pecs.name}`;
-        homeIndicator.style.display = 'none'; // Dölj hemknappen på "idag"
+        homeIndicator.style.display = 'none';
       } else if (selectedDateOffset === 1) {
         dayTitle.innerText = `Imorgon ${pecs.name}`;
-        homeIndicator.style.display = 'flex'; // Visa hemknappen om vi bläddrat bort
+        homeIndicator.style.display = 'flex';
       } else {
         dayTitle.innerText = pecs.name.charAt(0).toUpperCase() + pecs.name.slice(1);
-        homeIndicator.style.display = 'flex'; // Visa hemknappen om vi bläddrat bort
+        homeIndicator.style.display = 'flex';
       }
 
       document.getElementById('prevDayBtn').disabled = (selectedDateOffset <= 0);
@@ -624,6 +777,7 @@
     function changeDay(delta) {
       if (selectedDateOffset + delta < 0) return;
       selectedDateOffset += delta;
+      closeModal();
       updateHeader();
       renderHourMarks();
       fetchEvents();
@@ -632,6 +786,7 @@
 
     function resetToToday() {
       selectedDateOffset = 0;
+      closeModal();
       updateHeader();
       renderHourMarks();
       fetchEvents();
@@ -726,6 +881,9 @@
         card.style.height = `${height}px`;
         card.style.zIndex = 10 + index;
 
+        // Klicka på kortet för att öppna modalen!
+        card.onclick = () => openModal(event);
+
         const startTimeStr = start.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
         const imgUrl = getCustomImage(event.summary);
 
@@ -768,6 +926,65 @@
 
         container.appendChild(card);
       });
+
+      // Uppdatera modalen i realtid om den är öppen
+      if (activeModalEvent) {
+        updateModalContent();
+      }
+    }
+
+    /* MODAL-FUNKTIONER */
+    function openModal(event) {
+      activeModalEvent = event;
+      updateModalContent();
+      document.getElementById('eventModal').classList.add('open');
+    }
+
+    function closeModal() {
+      activeModalEvent = null;
+      document.getElementById('eventModal').classList.remove('open');
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === 'eventModal') {
+        closeModal();
+      }
+    }
+
+    function updateModalContent() {
+      if (!activeModalEvent) return;
+
+      const event = activeModalEvent;
+      const start = new Date(event.start.dateTime);
+      const end = new Date(event.end.dateTime);
+      const now = new Date();
+
+      document.getElementById('modalImg').src = getCustomImage(event.summary);
+      document.getElementById('modalTime').textContent = start.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('modalTitle').textContent = event.summary || 'Aktivitet';
+
+      const statusContainer = document.getElementById('modalStatusContainer');
+
+      if (selectedDateOffset === 0 && now > end) {
+        statusContainer.innerHTML = `<div class="modal-passed-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Klar</div>`;
+      } else if (selectedDateOffset === 0 && now >= start && now <= end) {
+        statusContainer.innerHTML = `<div class="modal-countdown" style="background:#E5FBDF; color:var(--color-green); border-color:var(--color-green);">Pågår just nu!</div>`;
+      } else if (selectedDateOffset === 0 && now < start) {
+        const diffMs = start - now;
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+        let timeStr = '';
+        if (diffHours > 0) {
+          timeStr = `om ${diffHours} tim och ${diffMins} min`;
+        } else {
+          timeStr = `om ${diffMins} minuter`;
+        }
+
+        statusContainer.innerHTML = `<div class="modal-countdown">${timeStr}</div>`;
+      } else {
+        statusContainer.innerHTML = '';
+      }
     }
 
     renderHourMarks();
