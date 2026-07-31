@@ -16,7 +16,9 @@ const IMAGE_BANK = {
   'sova': 'bilder/sova.png',
   'affär': 'bilder/handla.png',
   'snacks': 'bilder/snacks.png',
-  'middag': 'bilder/middag.png'
+  'middag': 'bilder/middag.png',
+  'mamma': 'bilder/mamma.png',
+  'pappa': 'bilder/pappa.png'
 };
 
 // Bilden som används om inget ord matchar
