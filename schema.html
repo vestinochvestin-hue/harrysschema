@@ -364,9 +364,7 @@
       object-fit: contain;
     }
 
-    /* ========================================================= */
-    /* MODAL / POPUP-FÖNSTER                                     */
-    /* ========================================================= */
+    /* MODAL / POPUP-FÖNSTER */
     .modal-backdrop {
       position: fixed;
       top: 0;
@@ -587,8 +585,8 @@
       }
 
       .modal-countdown {
-        font-size: 22px;
-        padding: 10px 20px;
+        font-size: 20px;
+        padding: 10px 18px;
       }
     }
   </style>
@@ -698,6 +696,20 @@
         }
       }
       return typeof DEFAULT_IMAGE !== 'undefined' ? DEFAULT_IMAGE : '';
+    }
+
+    // BERÄKNAR TIDSSKILLNAD (DAGAR, TIMMAR, MINUTER) FRÅN JUST NU
+    function getRemainingTimeParts(targetDate) {
+      const now = new Date();
+      const diffMs = targetDate - now;
+      if (diffMs <= 0) return null;
+
+      const diffMinsTotal = Math.floor(diffMs / (1000 * 60));
+      const days = Math.floor(diffMinsTotal / (60 * 24));
+      const hours = Math.floor((diffMinsTotal % (60 * 24)) / 60);
+      const mins = diffMinsTotal % 60;
+
+      return { days, hours, mins };
     }
 
     function timeToPixels(date) {
@@ -881,7 +893,6 @@
         card.style.height = `${height}px`;
         card.style.zIndex = 10 + index;
 
-        // Klicka på kortet för att öppna modalen!
         card.onclick = () => openModal(event);
 
         const startTimeStr = start.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
@@ -897,19 +908,18 @@
           stateClass = 'state-active';
         } else {
           stateClass = 'state-upcoming';
-          if (selectedDateOffset === 0 && now < start) {
-            const diffMs = start - now;
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          
+          // NEDRÄKNING FÖR ALLA FRAMTIDA HANDELSER (IDAG OCH KOMMANDE DAGAR)
+          if (now < start) {
+            const timeParts = getRemainingTimeParts(start);
+            if (timeParts) {
+              let timeStr = 'om ';
+              if (timeParts.days > 0) timeStr += `${timeParts.days}d `;
+              if (timeParts.hours > 0 || timeParts.days > 0) timeStr += `${timeParts.hours}h `;
+              timeStr += `${timeParts.mins}m`;
 
-            let timeStr = '';
-            if (diffHours > 0) {
-              timeStr = `om ${diffHours}h ${diffMins}m`;
-            } else {
-              timeStr = `om ${diffMins}m`;
+              rightBadgeHtml = `<div class="countdown-text">${timeStr}</div>`;
             }
-
-            rightBadgeHtml = `<div class="countdown-text">${timeStr}</div>`;
           }
         }
 
@@ -927,7 +937,6 @@
         container.appendChild(card);
       });
 
-      // Uppdatera modalen i realtid om den är öppen
       if (activeModalEvent) {
         updateModalContent();
       }
@@ -969,19 +978,16 @@
         statusContainer.innerHTML = `<div class="modal-passed-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Klar</div>`;
       } else if (selectedDateOffset === 0 && now >= start && now <= end) {
         statusContainer.innerHTML = `<div class="modal-countdown" style="background:#E5FBDF; color:var(--color-green); border-color:var(--color-green);">Pågår just nu!</div>`;
-      } else if (selectedDateOffset === 0 && now < start) {
-        const diffMs = start - now;
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      } else if (now < start) {
+        const timeParts = getRemainingTimeParts(start);
+        if (timeParts) {
+          let timeStr = 'om ';
+          if (timeParts.days > 0) timeStr += `${timeParts.days} dag${timeParts.days > 1 ? 'ar' : ''} `;
+          if (timeParts.hours > 0 || timeParts.days > 0) timeStr += `${timeParts.hours} tim `;
+          timeStr += `${timeParts.mins} min`;
 
-        let timeStr = '';
-        if (diffHours > 0) {
-          timeStr = `om ${diffHours} tim och ${diffMins} min`;
-        } else {
-          timeStr = `om ${diffMins} minuter`;
+          statusContainer.innerHTML = `<div class="modal-countdown">${timeStr}</div>`;
         }
-
-        statusContainer.innerHTML = `<div class="modal-countdown">${timeStr}</div>`;
       } else {
         statusContainer.innerHTML = '';
       }
