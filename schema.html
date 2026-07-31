@@ -173,7 +173,7 @@
       width: 100%;
     }
 
-    /* RADER MED PRICKAR */
+    /* TIMMARS VÅGRÄTA LINJER */
     .hour-row {
       position: absolute;
       left: 0;
@@ -191,33 +191,54 @@
       color: var(--color-dark);
     }
 
-    .hour-dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      margin-right: 12px;
-      flex-shrink: 0;
-      transition: background-color 0.3s ease;
-    }
-
-    .hour-dot.passed {
-      background-color: var(--color-green);
-    }
-
-    .hour-dot.future {
-      background-color: var(--color-red);
-    }
-
     .hour-line {
       flex: 1;
       height: 1.5px;
       background-color: rgba(17, 24, 39, 0.2);
+      margin-left: 10px;
     }
 
-    /* "JUST NU"-PIL */
+    /* 5-MINUTERS PRICKAR (FLYTTADE TILL HÖGER TILL LEFT: 110PX) */
+    .minute-dots-container {
+      position: absolute;
+      left: 110px;
+      top: 0;
+      bottom: 0;
+      width: 12px;
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    .minute-dot {
+      position: absolute;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: background-color 0.3s ease;
+    }
+
+    .minute-dot.passed {
+      background-color: var(--color-green);
+    }
+
+    .minute-dot.future {
+      background-color: var(--color-red);
+    }
+
+    .minute-dot.on-arrow-passed {
+      background-color: #FFFFFF;
+    }
+
+    .minute-dot.on-arrow-future {
+      background-color: var(--color-red);
+    }
+
+    /* "JUST NU"-PIL (ANPASSAD TILL PRICKARNA) */
     .now-indicator {
       position: absolute;
-      left: 75px;
+      left: 95px;
       z-index: 50;
       display: flex;
       align-items: center;
@@ -236,7 +257,7 @@
     /* BASE EVENT CARD */
     .event-card {
       position: absolute;
-      left: 235px;
+      left: 255px;
       right: 0px;
       border-radius: 20px;
       padding: 14px 24px;
@@ -510,14 +531,20 @@
         font-size: 15px;
       }
 
-      .hour-dot {
-        width: 12px;
-        height: 12px;
-        margin-right: 6px;
+      /* Mobil: Prickarna förskjutna till höger */
+      .minute-dots-container {
+        left: 68px;
+        width: 8px;
       }
 
+      .minute-dot {
+        width: 4px;
+        height: 4px;
+      }
+
+      /* Mobil: Pil förskjuten */
       .now-indicator {
-        left: 42px;
+        left: 54px;
       }
 
       .now-arrow-svg {
@@ -525,7 +552,7 @@
       }
 
       .event-card {
-        left: 115px !important;
+        left: 125px !important;
         right: 0px !important;
         padding: 8px 12px;
         gap: 10px;
@@ -625,11 +652,15 @@
       </div>
 
       <div class="timeline-container" id="timelineContainer">
+        
+        <!-- VERTIKAL SLINGA MED 5-MINUTERS PRICKAR -->
+        <div class="minute-dots-container" id="minuteDotsContainer"></div>
+
         <!-- "JUST NU"-PIL -->
         <div class="now-indicator" id="nowIndicator">
           <svg class="now-arrow-svg" viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M 10 30 C 10 21 17 15 26 15 L 98 15 C 103 15 106 11 106 5 C 106 2 109 0 112 1.5 L 154 51 C 156.5 54 156.5 56 154 59 L 112 108.5 C 109 110 106 108 106 105 C 106 99 103 95 98 95 L 26 95 C 17 95 10 89 10 80 Z" fill="#006700" stroke="none"/>
-            <text id="nowTimeText" x="58" y="55" fill="#FFFFFF" font-family="Lexend, sans-serif" font-size="22" font-weight="700" text-anchor="middle" dominant-baseline="central">13:43</text>
+            <text id="nowTimeText" x="70" y="55" fill="#FFFFFF" font-family="Lexend, sans-serif" font-size="22" font-weight="700" text-anchor="middle" dominant-baseline="central">13:43</text>
           </svg>
         </div>
 
@@ -698,7 +729,6 @@
       return typeof DEFAULT_IMAGE !== 'undefined' ? DEFAULT_IMAGE : '';
     }
 
-    // BERÄKNAR TIDSSKILLNAD (DAGAR, TIMMAR, MINUTER) FRÅN JUST NU
     function getRemainingTimeParts(targetDate) {
       const now = new Date();
       const diffMs = targetDate - now;
@@ -727,9 +757,6 @@
       const oldHours = container.querySelectorAll('.hour-row');
       oldHours.forEach(el => el.remove());
 
-      const now = new Date();
-      const currentHour = now.getHours();
-
       for (let h = DAY_START_HOUR; h <= DAY_END_HOUR; h++) {
         const dummy = new Date();
         dummy.setHours(h, 0, 0);
@@ -739,17 +766,55 @@
         row.className = 'hour-row';
         row.style.top = `${topPos}px`;
 
-        let dotClass = 'future';
-        if (selectedDateOffset < 0 || (selectedDateOffset === 0 && h <= currentHour)) {
-          dotClass = 'passed';
-        }
-
         row.innerHTML = `
           <div class="hour-label">${h.toString().padStart(2, '0')}:00</div>
-          <div class="hour-dot ${dotClass}"></div>
           <div class="hour-line"></div>
         `;
         container.appendChild(row);
+      }
+    }
+
+    function renderMinuteDots() {
+      const dotsContainer = document.getElementById('minuteDotsContainer');
+      dotsContainer.innerHTML = '';
+
+      const now = new Date();
+      const nowTop = timeToPixels(now);
+      
+      const arrowTopBound = nowTop - 40;
+      const arrowBottomBound = nowTop + 40;
+
+      for (let h = DAY_START_HOUR; h <= DAY_END_HOUR; h++) {
+        for (let m = 0; m < 60; m += 5) {
+          if (h === DAY_END_HOUR && m > 0) break;
+
+          const dummy = new Date();
+          dummy.setHours(h, m, 0);
+          const topPos = timeToPixels(dummy);
+
+          const dot = document.createElement('div');
+          dot.className = 'minute-dot';
+          dot.style.top = `${topPos}px`;
+
+          const isPassed = selectedDateOffset < 0 || (selectedDateOffset === 0 && (h < now.getHours() || (h === now.getHours() && m <= now.getMinutes())));
+          const isUnderArrow = (selectedDateOffset === 0) && (topPos >= arrowTopBound && topPos <= arrowBottomBound);
+
+          if (isUnderArrow) {
+            if (isPassed) {
+              dot.classList.add('on-arrow-passed');
+            } else {
+              dot.classList.add('on-arrow-future');
+            }
+          } else {
+            if (isPassed) {
+              dot.classList.add('passed');
+            } else {
+              dot.classList.add('future');
+            }
+          }
+
+          dotsContainer.appendChild(dot);
+        }
       }
     }
 
@@ -792,6 +857,7 @@
       closeModal();
       updateHeader();
       renderHourMarks();
+      renderMinuteDots();
       fetchEvents();
       scrollToNow();
     }
@@ -801,6 +867,7 @@
       closeModal();
       updateHeader();
       renderHourMarks();
+      renderMinuteDots();
       fetchEvents();
       scrollToNow();
     }
@@ -908,8 +975,6 @@
           stateClass = 'state-active';
         } else {
           stateClass = 'state-upcoming';
-          
-          // NEDRÄKNING FÖR ALLA FRAMTIDA HANDELSER (IDAG OCH KOMMANDE DAGAR)
           if (now < start) {
             const timeParts = getRemainingTimeParts(start);
             if (timeParts) {
@@ -994,13 +1059,14 @@
     }
 
     renderHourMarks();
+    renderMinuteDots();
     updateHeader();
     updateNowIndicator();
     fetchEvents();
 
     setInterval(() => {
       updateNowIndicator();
-      renderHourMarks();
+      renderMinuteDots();
       if (cachedEvents.length > 0) {
         renderEvents(cachedEvents);
       }
